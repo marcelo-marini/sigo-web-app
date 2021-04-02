@@ -1,0 +1,88 @@
+﻿@model IEnumerable<Sigo.WebApp.Models.Standard>
+
+@{
+    ViewData["Title"] = "Normas";
+}
+<div class="row col-md-12">
+    <div class="col-md-2">
+        <h4>Normas</h4>
+    </div>
+    <div class="col-md-10">
+        <p>
+            <a class="btn btn-primary" asp-action="Create">Criar</a>
+        </p>
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>
+                    @Html.Label("Descrição")
+                </th>
+
+                <th >
+                    @Html.Label("Código")
+                </th>
+                <th>
+                    @Html.Label("Status")
+                </th>
+                <th >
+                    @Html.Label("Data")
+                </th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr >
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Code)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Status)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.FormatedCreatedAt)
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a class="btn btn-primary btn-sm" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
+                            <div class="clearfix"></div>
+                            <a target="_blank" href="@item.Url" class="btn btn-primary btn-sm">Visualizar</a>
+                            <div class="clearfix"></div>
+                            <a data-item-description="@item.Description" data-item-id="@item.Id" data-toggle="modal" data-target="#confirm-delete" class="btn btn-danger btn-sm">Excluir</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+
+            <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true"></span>
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">Confirmação</h4>
+                        </div>
+                        <div class="modal-body">
+                            Deseja realmente realizar a exlusão?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button"  class="btn btn-default" data-dismiss="modal">Fechar</button>
+                            <input type="submit" value="Delete" class="btn btn-danger btn-ok"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </tbody>
+        </table>
+    </div>
+
+</div>

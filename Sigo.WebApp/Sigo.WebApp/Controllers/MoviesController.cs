@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Sigo.WebApp.ApiServices;
+using Sigo.WebApp.ExternalServices;
 using Sigo.WebApp.Models;
 
 namespace Sigo.WebApp.Controllers
@@ -15,18 +15,18 @@ namespace Sigo.WebApp.Controllers
     [Authorize]
     public class MoviesController : Controller
     {        
-        private readonly IMovieApiService _movieApiService;
+        private readonly IStandardApiService _movieApiService;
 
-        public MoviesController(IMovieApiService movieApiService)
+        public MoviesController(IStandardApiService movieApiService)
         {
             _movieApiService = movieApiService ?? throw new ArgumentNullException(nameof(movieApiService));
         }
 
-        // GET: Movies
         public async Task<IActionResult> Index()
         {
             await LogTokenAndClaims();
-            return View(await _movieApiService.GetMovies());
+            return View();
+         //   return View(await _movieApiService.GetMovies());
         }
         public async Task LogTokenAndClaims()
         {
@@ -43,7 +43,7 @@ namespace Sigo.WebApp.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> OnlyAdmin()
         {
-            var userInfo = await _movieApiService.GetUserInfo();
+            var userInfo = await _movieApiService.GetUserInfoAsync();
             return View(userInfo);            
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using IdentityModel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -10,7 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
-using Sigo.WebApp.ApiServices;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Sigo.WebApp.ExternalServices;
+using Sigo.WebApp.FileService;
 using Sigo.WebApp.HttpHandlers;
 
 namespace Sigo.WebApp
@@ -22,28 +26,34 @@ namespace Sigo.WebApp
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        private IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
-            services.AddScoped<IMovieApiService, MovieApiService>();
-
-
-            services.AddTransient<AuthenticationDelegatingHandler>();
-           
-            services.AddHttpClient("MovieAPIClient", client =>
+            services.AddControllersWithViews().AddNewtonsoftJson(options =>
             {
-                client.BaseAddress = new Uri("https://localhost:5010/"); // API GATEWAY URL
+                options.SerializerSettings.ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new SnakeCaseNamingStrategy()
+                };
+                options.SerializerSettings.Formatting = Formatting.Indented;
+            });
+
+            services.AddScoped<IStandardApiService, StandardApiService>();
+            services.AddScoped<IFileService, BlobStorage>();
+            services.AddTransient<AuthenticationDelegatingHandler>();
+
+            services.AddHttpClient("StandardApiClient", client =>
+            {
+                // client.BaseAddress = new Uri(Configuration.GetSection("BaseUrls").GetValue<string>("ApiGateway"));
+                client.BaseAddress = new Uri("https://localhost:5103/");
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
             }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
-
-            // 2 create an HttpClient used for accessing the IDP
-            services.AddHttpClient("IDPClient", client =>
+            services.AddHttpClient("AuthClient", client =>
             {
-                client.BaseAddress = new Uri("https://localhost:5005/");
+                client.BaseAddress = new Uri(Configuration.GetSection("BaseUrls").GetValue<string>("AuthApi"));
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
             });
@@ -57,30 +67,30 @@ namespace Sigo.WebApp
                 })
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
-                {                    
-                    options.Authority = "https://localhost:5005";
+                {
+                    options.Authority = Configuration.GetSection("BaseUrls").GetValue<string>("AuthApi");
 
-                    options.ClientId = "movies_mvc_client";
-                    options.ClientSecret = "secret";
+                    options.ClientId = Configuration.GetSection("Credentials").GetValue<string>("ClientId");
+                    options.ClientSecret = Configuration.GetSection("Credentials").GetValue<string>("ClientSecret");
                     options.ResponseType = "code id_token";
 
                     options.Scope.Add("address");
                     options.Scope.Add("email");
-                    options.Scope.Add("roles");
+                    // options.Scope.Add("roles");
 
                     options.ClaimActions.DeleteClaim("sid");
                     options.ClaimActions.DeleteClaim("idp");
                     options.ClaimActions.DeleteClaim("s_hash");
                     options.ClaimActions.DeleteClaim("auth_time");
-                    options.ClaimActions.MapUniqueJsonKey("role", "role");
+                    // options.ClaimActions.MapUniqueJsonKey("role", "role");
 
-                    options.Scope.Add("movieAPI");
+                    options.Scope.Add("StandardApi");
 
                     options.SaveTokens = true;
                     options.GetClaimsFromUserInfoEndpoint = true;
 
                     options.TokenValidationParameters = new TokenValidationParameters
-                    {                       
+                    {
                         NameClaimType = JwtClaimTypes.GivenName,
                         RoleClaimType = JwtClaimTypes.Role
                     };
@@ -100,6 +110,7 @@ namespace Sigo.WebApp
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
