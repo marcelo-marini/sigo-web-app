@@ -25,22 +25,19 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Standards" asp-action="Index">Gestão de Normas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Movies" asp-action="Index">Movies</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                     </li>
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Movies" asp-action="Logout">Logout</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Logout">Logout</a>
                         </li>
                     }
 
                     @if (User.IsInRole("admin"))
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Movies" asp-action="OnlyAdmin">Only Admin Page</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="" asp-action="OnlyAdmin">Only Admin Page</a>
                         </li>
                     }
 
