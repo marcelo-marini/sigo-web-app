@@ -15,10 +15,6 @@ namespace Sigo.WebApp.Models
         public string Url { get; set; }
 
         [Required(ErrorMessage = "Obrigatório")]
-        [JsonProperty("status"), DisplayName("status")]
-        public string Status { get; set; }
-
-        [Required(ErrorMessage = "Obrigatório")]
         [JsonProperty("type"), DisplayName("type")]
         public string Type { get; set; }
 

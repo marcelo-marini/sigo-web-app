@@ -51,12 +51,14 @@
                         @Html.DisplayFor(modelItem => item.FormatedCreatedAt)
                     </td>
                     <td>
-                        <div class="btn-group">
-                            <a class="btn btn-primary btn-sm" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
-                            <div class="clearfix"></div>
-                            <a target="_blank" href="@item.Url" class="btn btn-primary btn-sm">Visualizar</a>
-                            <div class="clearfix"></div>
-                            <a data-item-description="@item.Description" data-item-id="@item.Id" data-toggle="modal" data-target="#confirm-delete" class="btn btn-danger btn-sm">Excluir</a>
+                        <div class="btn-toolbar">
+                            <div class="btn-group">
+                                <a class="btn btn-primary btn-sm mr-1" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
+                                <div class="clearfix"></div>
+                                <a target="_blank" href="@item.Url" class="btn btn-primary btn-sm mr-1">Visualizar</a>
+                                <div class="clearfix"></div>
+                                <a data-item-id="@item.Id" data-toggle="modal" data-target="#confirm-delete" class="btn btn-danger btn-sm mr-1">Excluir</a>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -75,7 +77,7 @@
                             Deseja realmente realizar a exlusão?
                         </div>
                         <div class="modal-footer">
-                            <button type="button"  class="btn btn-default" data-dismiss="modal">Fechar</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
                             <input type="submit" value="Delete" class="btn btn-danger btn-ok"/>
                         </div>
                     </div>

@@ -10,7 +10,7 @@ using Sigo.WebApp.Models;
 
 namespace Sigo.WebApp.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class StandardsController : Controller
     {
         private readonly IStandardApiService _standardApiService;
@@ -40,7 +40,6 @@ namespace Sigo.WebApp.Controllers
             await _standardApiService.CreateStandardAsync(standard);
             return RedirectToAction(nameof(Index));
         }
-        
        
         public async Task<IActionResult> Edit(string id)
         {

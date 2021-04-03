@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Polly;
 
 namespace Sigo.WebApp.FileService
@@ -13,7 +12,6 @@ namespace Sigo.WebApp.FileService
     public class BlobStorage : IFileService
     {
         private readonly CloudStorageAccount _storageAccount;
-        private const string Directory = "usagereport";
         private readonly string _container;
 
         public BlobStorage(IConfiguration configuration)
@@ -35,12 +33,9 @@ namespace Sigo.WebApp.FileService
                     .ExecuteAsync(async () =>
                     {
                         var sasToken = BuildAccountSasToken();
-
                         var container = _storageAccount.CreateCloudBlobClient().GetContainerReference(_container);
-
-                        //   var directory = container.GetDirectoryReference(Directory);
-
                         var blob = container.GetBlockBlobReference(filePath);
+                        
                         blob.Properties.ContentType = file.ContentType;
                         blob.Properties.ContentDisposition = $"inline;filename={blob.Name}";
 
