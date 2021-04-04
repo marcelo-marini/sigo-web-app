@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Json;
 using IdentityModel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -45,8 +44,7 @@ namespace Sigo.WebApp
 
             services.AddHttpClient("StandardApiClient", client =>
             {
-                // client.BaseAddress = new Uri(Configuration.GetSection("BaseUrls").GetValue<string>("ApiGateway"));
-                client.BaseAddress = new Uri("https://localhost:5103/");
+                client.BaseAddress = new Uri(Configuration.GetSection("BaseUrls").GetValue<string>("ApiGateway"));
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
             }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
@@ -69,22 +67,19 @@ namespace Sigo.WebApp
                 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
                 {
                     options.Authority = Configuration.GetSection("BaseUrls").GetValue<string>("AuthApi");
-
                     options.ClientId = Configuration.GetSection("Credentials").GetValue<string>("ClientId");
                     options.ClientSecret = Configuration.GetSection("Credentials").GetValue<string>("ClientSecret");
+                    
                     options.ResponseType = "code id_token";
 
                     options.Scope.Add("address");
                     options.Scope.Add("email");
-                    // options.Scope.Add("roles");
+                    options.Scope.Add("StandardApi");
 
                     options.ClaimActions.DeleteClaim("sid");
                     options.ClaimActions.DeleteClaim("idp");
                     options.ClaimActions.DeleteClaim("s_hash");
                     options.ClaimActions.DeleteClaim("auth_time");
-                    // options.ClaimActions.MapUniqueJsonKey("role", "role");
-
-                    options.Scope.Add("StandardApi");
 
                     options.SaveTokens = true;
                     options.GetClaimsFromUserInfoEndpoint = true;
@@ -107,7 +102,6 @@ namespace Sigo.WebApp
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 

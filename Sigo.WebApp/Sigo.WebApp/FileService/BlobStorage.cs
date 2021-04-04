@@ -68,26 +68,17 @@ namespace Sigo.WebApp.FileService
             return _storageAccount.GetSharedAccessSignature(policy);
         }
 
-
-        private MultipartFormDataContent GetFileContent(IFormFile file)
-        {
-            byte[] data;
-            using (var br = new BinaryReader(file.OpenReadStream()))
-                data = br.ReadBytes((int) file.OpenReadStream().Length);
-
-            var bytes = new ByteArrayContent(data);
-
-            return new MultipartFormDataContent {{bytes, "file", file.FileName}};
-        }
-
         private async Task<string> CreateLocalFile(IFormFile file, string code)
         {
             var filePath = $@"{code}-{DateTime.Now.Millisecond.ToString()}{Path.GetExtension(file.FileName)}";
 
             DeleteFile(filePath);
 
-            await using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
+           
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);    
+            }
 
             return filePath;
         }

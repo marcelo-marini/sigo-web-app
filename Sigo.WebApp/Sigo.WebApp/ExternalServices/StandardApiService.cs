@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
@@ -33,16 +34,21 @@ namespace Sigo.WebApp.ExternalServices
         public async Task<IEnumerable<Standard>> GetStandardsAsync()
         {
             var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
-            
+
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
                 "/standards");
-            
+
             var response = await httpClient.SendAsync(
                 request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-            
+
             response.EnsureSuccessStatusCode();
-            
+
+            if (response.StatusCode == HttpStatusCode.NoContent)    
+            {
+                return new List<Standard>();
+            }
+ 
             var content = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<List<Standard>>(content);
         }
