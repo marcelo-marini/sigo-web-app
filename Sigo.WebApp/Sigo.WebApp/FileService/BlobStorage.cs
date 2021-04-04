@@ -74,11 +74,9 @@ namespace Sigo.WebApp.FileService
 
             DeleteFile(filePath);
 
-           
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);    
-            }
+
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
 
             return filePath;
         }
