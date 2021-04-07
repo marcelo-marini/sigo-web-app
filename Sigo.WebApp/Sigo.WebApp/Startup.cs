@@ -66,6 +66,7 @@ namespace Sigo.WebApp
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
                 {
+:ART:                    options.RequireHttpsMetadata = false;
                     options.Authority = Configuration.GetSection("BaseUrls").GetValue<string>("AuthApi");
                     options.ClientId = Configuration.GetSection("Credentials").GetValue<string>("ClientId");
                     options.ClientSecret = Configuration.GetSection("Credentials").GetValue<string>("ClientSecret");
@@ -106,6 +107,8 @@ namespace Sigo.WebApp
             }
 
             app.UseHttpsRedirection();
+
+
             app.UseStaticFiles();
 
             app.UseRouting();
