@@ -91,7 +91,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
-                "https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards");
+                "https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
@@ -119,7 +119,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Put,
-                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
@@ -140,7 +140,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Delete,
-                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards{id}");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards{id}");
 
             var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
