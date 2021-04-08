@@ -33,23 +33,70 @@ namespace Sigo.WebApp.ExternalServices
 
         public async Task<IEnumerable<Standard>> GetStandardsAsync()
         {
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            //var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
 
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                "/standards");
+            //var request = new HttpRequestMessage(
+            //    HttpMethod.Get,
+            //    "/standards");
 
-            var response = await httpClient.SendAsync(
-                request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            //var response = await httpClient.SendAsync(
+            //    request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
+            //response.EnsureSuccessStatusCode();
+
+            //if (response.StatusCode == HttpStatusCode.NoContent)    
+            //{
+            //    return new List<Standard>();
+            //}
+
+            //var content = await response.Content.ReadAsStringAsync();
+            //return JsonConvert.DeserializeObject<List<Standard>>(content);
+
+            ////////////////////////// //////////////////////// ////////////////////////
+            //// WAY 2 :
+
+            // 1. "retrieve" our api credentials. This must be registered on Identity Server!
+            var apiClientCredentials = new ClientCredentialsTokenRequest
+            {
+                Address = "https://sigo-tcc-marini-auth.azurewebsites.net/connect/token",
+
+                ClientId = "standard-api-client",
+                ClientSecret = "secret",
+                GrantType = "client_credentials",
+
+                // This is the scope our Protected API requires. 
+                Scope = "StandardApi"
+            };
+
+            // creates a new HttpClient to talk to our IdentityServer (localhost:5005)
+            var client = new HttpClient();
+
+            // just checks if we can reach the Discovery document. Not 100% needed but..
+            var disco = await client.GetDiscoveryDocumentAsync("https://sigo-tcc-marini-auth.azurewebsites.net");
+            if (disco.IsError)
+            {
+                return null; // throw 500 error
+            }
+
+            // 2. Authenticates and get an access token from Identity Server
+            var tokenResponse = await client.RequestClientCredentialsTokenAsync(apiClientCredentials);
+            if (tokenResponse.IsError)
+            {
+                return null;
+            }
+
+            // Another HttpClient for talking now with our Protected API
+            var apiClient = new HttpClient();
+
+            // 3. Set the access_token in the request Authorization: Bearer <token>
+            apiClient.SetBearerToken(tokenResponse.AccessToken);
+
+            // 4. Send a request to our Protected API
+            var response = await apiClient.GetAsync("https://localhost:5001/api/movies");
             response.EnsureSuccessStatusCode();
 
-            if (response.StatusCode == HttpStatusCode.NoContent)    
-            {
-                return new List<Standard>();
-            }
- 
             var content = await response.Content.ReadAsStringAsync();
+
             return JsonConvert.DeserializeObject<List<Standard>>(content);
         }
 

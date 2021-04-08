@@ -10,7 +10,7 @@ using Sigo.WebApp.Models;
 
 namespace Sigo.WebApp.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class StandardsController : Controller
     {
         private readonly IStandardApiService _standardApiService;
