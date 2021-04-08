@@ -11,7 +11,6 @@ using Sigo.WebApp.Models;
 
 namespace Sigo.WebApp.Controllers
 {
-    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
