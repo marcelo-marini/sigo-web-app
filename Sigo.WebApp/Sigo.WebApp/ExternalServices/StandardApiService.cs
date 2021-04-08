@@ -57,6 +57,11 @@ namespace Sigo.WebApp.ExternalServices
             var response = await apiClient.GetAsync("https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards");
             response.EnsureSuccessStatusCode();
 
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return new List<Standard>();
+            }
+
             var content = await response.Content.ReadAsStringAsync();
 
             return JsonConvert.DeserializeObject<List<Standard>>(content);
