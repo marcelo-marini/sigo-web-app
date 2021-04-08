@@ -8,7 +8,8 @@ namespace Sigo.WebApp.Controllers
     {
         public IActionResult Index()
         {
-            return View("~/Areas/Home/Views/Index.cshtml");
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }
