@@ -54,7 +54,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var apiClient = await GetClient();
 
-            var response = await apiClient.GetAsync("https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards");
+            var response = await apiClient.GetAsync("https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards");
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -68,7 +68,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards/{id}");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards/standards/{id}");
 
             var apiClient = await GetClient();
 
@@ -91,7 +91,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
-                "https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards");
+                "https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
@@ -119,7 +119,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Put,
-                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
@@ -140,7 +140,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Delete,
-                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards{id}");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards{id}");
 
             var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
