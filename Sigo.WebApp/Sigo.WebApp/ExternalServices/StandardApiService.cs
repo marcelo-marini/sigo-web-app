@@ -73,7 +73,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards/standards/{id}");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards/{id}");
 
             var apiClient = await GetClient();
 
@@ -145,7 +145,7 @@ namespace Sigo.WebApp.ExternalServices
 
             var request = new HttpRequestMessage(
                 HttpMethod.Delete,
-                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards{id}");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net/standards/{id}");
 
             var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
