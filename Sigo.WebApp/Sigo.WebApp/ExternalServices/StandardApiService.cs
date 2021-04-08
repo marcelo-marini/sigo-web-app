@@ -52,47 +52,9 @@ namespace Sigo.WebApp.ExternalServices
             //var content = await response.Content.ReadAsStringAsync();
             //return JsonConvert.DeserializeObject<List<Standard>>(content);
 
-            ////////////////////////// //////////////////////// ////////////////////////
-            //// WAY 2 :
+            var apiClient = await GetClient();
 
-            // 1. "retrieve" our api credentials. This must be registered on Identity Server!
-            var apiClientCredentials = new ClientCredentialsTokenRequest
-            {
-                Address = "https://sigo-tcc-marini-auth.azurewebsites.net/connect/token",
-
-                ClientId = "standard-api-client",
-                ClientSecret = "secret",
-                GrantType = "client_credentials",
-
-                // This is the scope our Protected API requires. 
-                Scope = "StandardApi"
-            };
-
-            // creates a new HttpClient to talk to our IdentityServer (localhost:5005)
-            var client = new HttpClient();
-
-            // just checks if we can reach the Discovery document. Not 100% needed but..
-            var disco = await client.GetDiscoveryDocumentAsync("https://sigo-tcc-marini-auth.azurewebsites.net");
-            if (disco.IsError)
-            {
-                return null; // throw 500 error
-            }
-
-            // 2. Authenticates and get an access token from Identity Server
-            var tokenResponse = await client.RequestClientCredentialsTokenAsync(apiClientCredentials);
-            if (tokenResponse.IsError)
-            {
-                return null;
-            }
-
-            // Another HttpClient for talking now with our Protected API
-            var apiClient = new HttpClient();
-
-            // 3. Set the access_token in the request Authorization: Bearer <token>
-            apiClient.SetBearerToken(tokenResponse.AccessToken);
-
-            // 4. Send a request to our Protected API
-            var response = await apiClient.GetAsync("https://localhost:5001/api/movies");
+            var response = await apiClient.GetAsync("https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards");
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -102,13 +64,15 @@ namespace Sigo.WebApp.ExternalServices
 
         public async Task<UpdateStandard> GetStandardByIdAsync(string id)
         {
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            //var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
 
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"/standards/{id}");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards/{id}");
 
-            var response = await httpClient.SendAsync(
+            var apiClient = await GetClient();
+
+            var response = await apiClient.SendAsync(
                 request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
             response.EnsureSuccessStatusCode();
@@ -121,16 +85,18 @@ namespace Sigo.WebApp.ExternalServices
         {
             standard.Url = await _fileService.UploadAsync(standard.File, standard.Code);
 
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            // var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+
+            var apiClient = await GetClient();
 
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
-                "/standards");
+                "https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
-            var response = await httpClient.SendAsync(
+            var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
                 .ConfigureAwait(false);
 
@@ -147,16 +113,18 @@ namespace Sigo.WebApp.ExternalServices
                 standard.Url = await _fileService.UploadAsync(standard.File, standard.Code);
             }
 
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            //var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+
+            var apiClient = await GetClient();
 
             var request = new HttpRequestMessage(
                 HttpMethod.Put,
-                $"/standards");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
-            var response = await httpClient.SendAsync(
+            var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
                 .ConfigureAwait(false);
 
@@ -168,13 +136,13 @@ namespace Sigo.WebApp.ExternalServices
 
         public async Task DeleteStandardAsync(string id)
         {
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            var apiClient = await GetClient();
 
             var request = new HttpRequestMessage(
                 HttpMethod.Delete,
-                $"/standards/{id}");
+                $"https://sigo-tcc-marini-api-gateway.azurewebsites.net//api/standards/standards{id}");
 
-            var response = await httpClient.SendAsync(
+            var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
                 .ConfigureAwait(false);
 
@@ -210,6 +178,45 @@ namespace Sigo.WebApp.ExternalServices
             var userInfoDictionary = userInfoResponse.Claims.ToDictionary(claim => claim.Type, claim => claim.Value);
 
             return new UserInfoViewModel(userInfoDictionary);
+        }
+
+        private async Task<TokenResponse> GenerateToken()
+        {
+            var apiClientCredentials = new ClientCredentialsTokenRequest
+            {
+                Address = "https://sigo-tcc-marini-auth.azurewebsites.net/connect/token",
+
+                ClientId = "standard-api-client",
+                ClientSecret = "secret",
+                GrantType = "client_credentials",
+                Scope = "StandardApi"
+            };
+
+            var client = new HttpClient();
+            var disco = await client.GetDiscoveryDocumentAsync("https://sigo-tcc-marini-auth.azurewebsites.net");
+
+            if (disco.IsError)
+            {
+                return null;
+            }
+
+            var tokenResponse = await client.RequestClientCredentialsTokenAsync(apiClientCredentials);
+
+            if (tokenResponse.IsError)
+            {
+                return null;
+            }
+
+            return tokenResponse;
+        }
+
+        private async Task<HttpClient> GetClient()
+        {
+            var tokenResponse = await GenerateToken();
+            var apiClient = new HttpClient();
+            apiClient.SetBearerToken(tokenResponse.AccessToken);
+
+            return apiClient;
         }
     }
 }
