@@ -68,7 +68,7 @@ namespace Sigo.WebApp
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
                 {
-                    options.RequireHttpsMetadata = false;
+                    
                     options.Authority = Configuration.GetSection("BaseUrls").GetValue<string>("AuthApi");
                     options.ClientId = Configuration.GetSection("Credentials").GetValue<string>("ClientId");
                     options.ClientSecret = Configuration.GetSection("Credentials").GetValue<string>("ClientSecret");
