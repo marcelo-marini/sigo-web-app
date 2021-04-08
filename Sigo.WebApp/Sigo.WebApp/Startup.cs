@@ -115,7 +115,7 @@ namespace Sigo.WebApp
             app.UseStaticFiles();
             app.UseRouting();
 
-            var forwardOptions = new ForwardedHeadersOptions
+             var forwardOptions = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
                 RequireHeaderSymmetry = false
@@ -126,10 +126,9 @@ namespace Sigo.WebApp
 
             app.UseForwardedHeaders(forwardOptions);
 
-            app.UseCookiePolicy(new CookiePolicyOptions
-            {
-
-                MinimumSameSitePolicy = Microsoft.AspNetCore.Http.SameSiteMode.Lax
+            app.UseCookiePolicy(new CookiePolicyOptions { 
+            
+                MinimumSameSitePolicy =  Microsoft.AspNetCore.Http.SameSiteMode.Unspecified
             });
 
             app.UseAuthentication();
