@@ -70,7 +70,7 @@ namespace Sigo.WebApp.FileService
 
         private async Task<string> CreateLocalFile(IFormFile file, string code)
         {
-            var filePath = $@"{code}-{DateTime.Now.Millisecond.ToString()}{Path.GetExtension(file.FileName)}";
+            var filePath = $@"sigo_{DateTime.Now.Millisecond}{Path.GetExtension(file.FileName)}";
 
             DeleteFile(filePath);
 
