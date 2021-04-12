@@ -43,7 +43,7 @@ namespace Sigo.WebApp.Controllers
             HttpContext.Response.Cookies.Delete(".AspNetCore.Identity.Application", new CookieOptions { Secure = true });
             HttpContext.Response.Cookies.Delete("idsrv.session", new CookieOptions { Secure = true });
 
-            return Index();
+          return  RedirectToAction("Index", "Home");
         }
     }
 }
