@@ -1,4 +1,12 @@
-﻿using System;
+﻿using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Newtonsoft.Json;
+using Sigo.WebApp.FileService;
+using Sigo.WebApp.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,13 +14,6 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
-using IdentityModel.Client;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Newtonsoft.Json;
-using Sigo.WebApp.FileService;
-using Sigo.WebApp.Models;
 
 namespace Sigo.WebApp.ExternalServices
 {
@@ -21,47 +22,47 @@ namespace Sigo.WebApp.ExternalServices
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IFileService _fileService;
+        private readonly IConfiguration _configuration;
+        private readonly string _apiGatewayUrl;
 
         public StandardApiService(IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
-            IFileService fileService)
+            IFileService fileService,
+            IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _fileService = fileService;
+            _configuration = configuration;
+            _apiGatewayUrl = _configuration.GetSection("BaseUrls:ApiGateway").Value;
         }
 
         public async Task<IEnumerable<Standard>> GetStandardsAsync()
         {
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            var apiClient = await GetClient();
 
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                "/standards");
-
-            var response = await httpClient.SendAsync(
-                request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-
+            var response = await apiClient.GetAsync($"{_apiGatewayUrl}standards");
             response.EnsureSuccessStatusCode();
 
-            if (response.StatusCode == HttpStatusCode.NoContent)    
+            if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 return new List<Standard>();
             }
- 
+
             var content = await response.Content.ReadAsStringAsync();
+
             return JsonConvert.DeserializeObject<List<Standard>>(content);
         }
 
         public async Task<UpdateStandard> GetStandardByIdAsync(string id)
         {
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
-
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"/standards/{id}");
+               $"{_apiGatewayUrl}standards/{id}");
 
-            var response = await httpClient.SendAsync(
+            var apiClient = await GetClient();
+
+            var response = await apiClient.SendAsync(
                 request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
             response.EnsureSuccessStatusCode();
@@ -74,16 +75,16 @@ namespace Sigo.WebApp.ExternalServices
         {
             standard.Url = await _fileService.UploadAsync(standard.File, standard.Code);
 
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            var apiClient = await GetClient();
 
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
-                "/standards");
+               $"{_apiGatewayUrl}standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
-            var response = await httpClient.SendAsync(
+            var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
                 .ConfigureAwait(false);
 
@@ -100,16 +101,16 @@ namespace Sigo.WebApp.ExternalServices
                 standard.Url = await _fileService.UploadAsync(standard.File, standard.Code);
             }
 
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            var apiClient = await GetClient();
 
             var request = new HttpRequestMessage(
                 HttpMethod.Put,
-                $"/standards");
+               $"{_apiGatewayUrl}standards");
 
             var json = JsonConvert.SerializeObject(standard, Formatting.Indented);
             request.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
-            var response = await httpClient.SendAsync(
+            var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
                 .ConfigureAwait(false);
 
@@ -121,13 +122,13 @@ namespace Sigo.WebApp.ExternalServices
 
         public async Task DeleteStandardAsync(string id)
         {
-            var httpClient = _httpClientFactory.CreateClient("StandardApiClient");
+            var apiClient = await GetClient();
 
             var request = new HttpRequestMessage(
                 HttpMethod.Delete,
-                $"/standards/{id}");
+                $"{_apiGatewayUrl}standards/{id}");
 
-            var response = await httpClient.SendAsync(
+            var response = await apiClient.SendAsync(
                     request, HttpCompletionOption.ResponseHeadersRead)
                 .ConfigureAwait(false);
 
@@ -163,6 +164,46 @@ namespace Sigo.WebApp.ExternalServices
             var userInfoDictionary = userInfoResponse.Claims.ToDictionary(claim => claim.Type, claim => claim.Value);
 
             return new UserInfoViewModel(userInfoDictionary);
+        }
+
+        private async Task<TokenResponse> GenerateToken()
+        {
+            var authBaseUrl = _configuration.GetSection("BaseUrls:Auth").Value;
+            var apiClientCredentials = new ClientCredentialsTokenRequest
+            {
+                Address = $"{authBaseUrl}/connect/token",
+
+                ClientId = _configuration.GetSection("StandardCredentials:ClientId").Value,
+                ClientSecret = _configuration.GetSection("StandardCredentials:ClientSecret").Value,
+                GrantType = _configuration.GetSection("StandardCredentials:GrantType").Value,
+                Scope = _configuration.GetSection("StandardCredentials:Scope").Value
+            };
+
+            var client = new HttpClient();
+            var disco = await client.GetDiscoveryDocumentAsync(authBaseUrl);
+
+            if (disco.IsError)
+            {
+                return null;
+            }
+
+            var tokenResponse = await client.RequestClientCredentialsTokenAsync(apiClientCredentials);
+
+            if (tokenResponse.IsError)
+            {
+                return null;
+            }
+
+            return tokenResponse;
+        }
+
+        private async Task<HttpClient> GetClient()
+        {
+            var tokenResponse = await GenerateToken();
+            var apiClient = new HttpClient();
+            apiClient.SetBearerToken(tokenResponse.AccessToken);
+
+            return apiClient;
         }
     }
 }

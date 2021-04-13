@@ -1,11 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.WindowsAzure.Storage;
 using Polly;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Sigo.WebApp.FileService
 {
@@ -70,7 +69,7 @@ namespace Sigo.WebApp.FileService
 
         private async Task<string> CreateLocalFile(IFormFile file, string code)
         {
-            var filePath = $@"{code}-{DateTime.Now.Millisecond.ToString()}{Path.GetExtension(file.FileName)}";
+            var filePath = $@"sigo_{DateTime.Now.Millisecond}{Path.GetExtension(file.FileName)}";
 
             DeleteFile(filePath);
 

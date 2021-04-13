@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -68,11 +69,11 @@ namespace Sigo.WebApp
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
                 {
-                    options.RequireHttpsMetadata = false;
+
                     options.Authority = Configuration.GetSection("BaseUrls").GetValue<string>("AuthApi");
                     options.ClientId = Configuration.GetSection("Credentials").GetValue<string>("ClientId");
                     options.ClientSecret = Configuration.GetSection("Credentials").GetValue<string>("ClientSecret");
-                    
+
                     options.ResponseType = "code id_token";
 
                     options.Scope.Add("address");
@@ -112,8 +113,23 @@ namespace Sigo.WebApp
 
 
             app.UseStaticFiles();
-
             app.UseRouting();
+
+             var forwardOptions = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+                RequireHeaderSymmetry = false
+            };
+
+            forwardOptions.KnownNetworks.Clear();
+            forwardOptions.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(forwardOptions);
+
+            app.UseCookiePolicy(new CookiePolicyOptions { 
+            
+                MinimumSameSitePolicy =  Microsoft.AspNetCore.Http.SameSiteMode.Unspecified
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
