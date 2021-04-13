@@ -1,11 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.WindowsAzure.Storage;
 using Polly;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Sigo.WebApp.FileService
 {
